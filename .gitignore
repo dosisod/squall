@@ -1,0 +1,6 @@
+build
+__pycache__
+squall.egg-info
+*.db3
+.venv
+dist
