@@ -4,3 +4,4 @@ squall.egg-info
 *.db3
 .venv
 dist
+*.so
