@@ -3,23 +3,23 @@
 
 #include <sqlite3.h>
 
-static PyObject *squall_validate(PyObject *self, PyObject *args);
+PyObject *squall_validate(PyObject *self, PyObject *args);
 
 static PyMethodDef squall_methods[] = {
-    {"validate", squall_validate, METH_VARARGS, NULL},
-    {NULL, NULL, 0, NULL}
+	{"validate", squall_validate, METH_VARARGS, NULL},
+	{NULL, NULL, 0, NULL}
 };
 
 static struct PyModuleDef squall_module = {
-    PyModuleDef_HEAD_INIT,
-    "squall",
-    NULL,
-    -1,
-    squall_methods
+	PyModuleDef_HEAD_INIT,
+	"squall",
+	NULL,
+	-1,
+	squall_methods
 };
 
 PyMODINIT_FUNC PyInit_squall(void) {
-    return PyModule_Create(&squall_module);
+	return PyModule_Create(&squall_module);
 }
 
 static const char *validate_stmt(const char *db_url, const char *stmt) {
@@ -29,30 +29,40 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 	if (err) return sqlite3_errmsg(db);
 
 	sqlite3_stmt *prepared_stmt = NULL;
-
-	err = sqlite3_prepare_v2(db, stmt, strlen(stmt), &prepared_stmt, NULL);
-	if (err) return sqlite3_errmsg(db);
+	const char *unused_sql = NULL;
 
 	for (;;) {
-		err = sqlite3_step(prepared_stmt);
+		err = sqlite3_prepare_v2(db, stmt, strlen(stmt), &prepared_stmt, &unused_sql);
+		if (err) return sqlite3_errmsg(db);
 
-		const char *error_msg = sqlite3_errmsg(db);
+		for (;;) {
+			err = sqlite3_step(prepared_stmt);
 
-		if (err == SQLITE_ROW) continue;
-		if (err == SQLITE_DONE) break;
+			const char *error_msg = sqlite3_errmsg(db);
 
-		if (error_msg) {
-			sqlite3_finalize(prepared_stmt);
-			return error_msg;
+			if (
+				err == SQLITE_ROW ||
+				err == SQLITE_DONE ||
+				err == SQLITE_READONLY
+			) break;
+
+			if (error_msg) {
+				sqlite3_finalize(prepared_stmt);
+				return error_msg;
+			}
 		}
-	}
 
-	sqlite3_finalize(prepared_stmt);
+		sqlite3_finalize(prepared_stmt);
+
+		if (!unused_sql || !*unused_sql) break;
+
+		stmt = unused_sql;
+	}
 
 	return NULL;
 }
 
-static PyObject *squall_validate(PyObject *self, PyObject *args) {
+PyObject *squall_validate(PyObject *self, PyObject *args) {
 	const char *db_url;
 	const char *stmt;
 
@@ -60,7 +70,7 @@ static PyObject *squall_validate(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	const char *err = validate(db_url, stmt);
+	const char *err = validate_stmt(db_url, stmt);
 
 	if (err) {
 		// TODO: return string instead
