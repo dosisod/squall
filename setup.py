@@ -3,7 +3,7 @@ from distutils.core import setup, Extension
 def main():
     setup(
         ext_modules=[
-            Extension("squall", ["squall/squall.c"], libraries=["sqlite3"]),
+            Extension("squall.util", ["squall/util.c"], libraries=["sqlite3"]),
         ],
         packages=["squall"],
         package_data={"squall": ["py.typed", "squall.pyi"]},

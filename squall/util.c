@@ -3,23 +3,23 @@
 
 #include <sqlite3.h>
 
-PyObject *squall_validate(PyObject *self, PyObject *args);
+PyObject *util_validate(PyObject *self, PyObject *args);
 
-static PyMethodDef squall_methods[] = {
-	{"validate", squall_validate, METH_VARARGS, NULL},
+static PyMethodDef util_methods[] = {
+	{"validate", util_validate, METH_VARARGS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef squall_module = {
+static struct PyModuleDef util_module = {
 	PyModuleDef_HEAD_INIT,
-	"squall",
+	"util",
 	NULL,
 	-1,
-	squall_methods
+	util_methods
 };
 
-PyMODINIT_FUNC PyInit_squall(void) {
-	return PyModule_Create(&squall_module);
+PyMODINIT_FUNC PyInit_util(void) {
+	return PyModule_Create(&util_module);
 }
 
 static const char *validate_stmt(const char *db_url, const char *stmt) {
@@ -62,7 +62,7 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 	return NULL;
 }
 
-PyObject *squall_validate(PyObject *self, PyObject *args) {
+PyObject *util_validate(PyObject *self, PyObject *args) {
 	const char *db_url;
 	const char *stmt;
 
@@ -72,10 +72,7 @@ PyObject *squall_validate(PyObject *self, PyObject *args) {
 
 	const char *err = validate_stmt(db_url, stmt);
 
-	if (err) {
-		// TODO: return string instead
-		printf("squall: %s\n", err);
-	}
+	if (err) return PyUnicode_FromString(err);
 
 	Py_INCREF(Py_None);
 	return Py_None;
