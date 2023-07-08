@@ -4,9 +4,14 @@ from squall import util
 
 SQLITE_EXECUTE_FUNCS = {"execute", "executescript", "executemany"}
 
+
+# TODO: turn into a dataclass
+SquallError = tuple[int, str]
+
+
 class SqliteStmtVisitor(ast.NodeVisitor):
     symbols: dict[str, str]
-    errors: list[tuple[int, str]]
+    errors: list[SquallError]
 
     def __init__(self) -> None:
         self.symbols = {}

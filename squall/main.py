@@ -1,21 +1,26 @@
 import ast
-import sys
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterable
 
-from squall.visitor import SqliteStmtVisitor
+from squall.visitor import SquallError, SqliteStmtVisitor
 
 
-def main(files: Iterable[Path]) -> None:
+def get_sqlite_errors_from_code(code: str) -> list[SquallError]:
+    tree = ast.parse(code)
+
+    visitor = SqliteStmtVisitor()
+    visitor.visit(tree)
+
+    return visitor.errors
+
+
+def get_sqlite_errors_from_file(file: Path) -> list[SquallError]:
+    code = file.read_text()
+
+    return get_sqlite_errors_from_code(code)
+
+
+def main(files: Iterator[Path]) -> None:
     for file in files:
-        tree = ast.parse(file.read_text())
-
-        visitor = SqliteStmtVisitor()
-        visitor.visit(tree)
-
-        for line, error in visitor.errors:
+        for line, error in get_sqlite_errors_from_file(file):
             print(f"file.py:{line}: {error}")
-
-
-if __name__ == "__main__":
-    main(Path(x) for x in sys.argv[1:])
