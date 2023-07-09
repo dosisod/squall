@@ -1,4 +1,4 @@
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 
 setup(
     name="squall",
@@ -11,9 +11,7 @@ setup(
             py_limited_api=True,
         ),
     ],
-    entry_points={
-        "console_scripts": ["squall=squall.__main__:main"]
-    },
+    entry_points={"console_scripts": ["squall=squall.__main__:main"]},
     packages=["squall"],
     package_data={"squall": ["py.typed"]},
     include_package_data=True,

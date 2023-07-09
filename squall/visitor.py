@@ -52,7 +52,9 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             if node.func.attr in SQLITE_EXECUTE_FUNCS:
                 arg = node.args[0]
 
-                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                if isinstance(arg, ast.Constant) and isinstance(
+                    arg.value, str
+                ):
                     error = util.validate("db.db3", arg.value)
 
                     if error:

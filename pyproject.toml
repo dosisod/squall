@@ -1,7 +1,78 @@
 [project]
 name = "squall"
 version = "1.0.0"
+description = "Static analysis tool for validating SQLite statements"
+authors = [
+  {name = "dosisod"}
+]
+license = { text = "GPL-3.0-only" }
+readme = "README.md"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Topic :: Software Development :: Testing",
+  "Typing :: Typed"
+]
+
+[project.urls]
+Repository = "https://github.com/dosisod/squall"
 
 [build-system]
 requires = ["setuptools ~= 65.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.poetry.scripts]
+squall = "squall.__main__:main"
+
+[tool.black]
+line-length = 79
+color = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+]
+skip_covered = true
+skip_empty = true
+
+[tool.isort]
+color_output = true
+include_trailing_comma = true
+multi_line_output = 3
+
+[tool.mypy]
+allow_redefinition = true
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_unimported = true
+namespace_packages = true
+pretty = true
+strict = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=squall --cov-report=html --cov-report=term-missing --cov-fail-under=0"
+testpaths = ["test"]
+
+[tool.ruff]
+line-length = 79
+
+select = ["ALL"]
+
+extend-ignore = [
+  "ANN101",
+  "D100", "D101", "D102", "D103", "D104", "D105", "D107", "D200", "D202", "D203",
+  "D205", "D212", "D214", "D400", "D401", "D404", "D405", "D406", "D407", "D412",
+  "COM812",
+  "FIX002", "FIX004",
+  "TD002", "TD003",
+]
+
+extend-exclude = ["test/data*"]
+
+[tool.ruff.per-file-ignores]
+"squall/visitor.py" = ["N802"]
+"squall/*" = ["INP001"]

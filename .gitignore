@@ -5,3 +5,5 @@ squall.egg-info
 .venv
 dist
 *.so
+.coverage
+htmlcov

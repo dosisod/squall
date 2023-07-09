@@ -2,7 +2,7 @@ import ast
 from collections.abc import Iterator
 from pathlib import Path
 
-from squall.visitor import SquallError, SqliteStmtVisitor
+from squall.visitor import SqliteStmtVisitor, SquallError
 
 
 def get_sqlite_errors_from_code(code: str) -> list[SquallError]:
@@ -23,4 +23,4 @@ def get_sqlite_errors_from_file(file: Path) -> list[SquallError]:
 def main(files: Iterator[Path]) -> None:
     for file in files:
         for line, error in get_sqlite_errors_from_file(file):
-            print(f"file.py:{line}: {error}")
+            print(f"{file}:{line}: {error}")  # noqa: T201
