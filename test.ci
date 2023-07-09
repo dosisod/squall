@@ -1,6 +1,6 @@
 on git.push where event.branch is "master"
 
-run_on image python:3.10-alpine.3.18
+run_on image python:3.10-alpine3.18
 
 shell pip install -r dev-requirements.txt
 make
