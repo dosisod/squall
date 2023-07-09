@@ -2,5 +2,8 @@ on git.push where event.branch is "master"
 
 run_on image python:3.10-alpine3.18
 
+shell apk add --no-cache make
+
 shell pip install -r dev-requirements.txt
+
 make
