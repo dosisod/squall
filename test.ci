@@ -5,5 +5,9 @@ run_on image python:3.10-alpine3.18
 shell apk add --no-cache make
 
 shell pip install -r dev-requirements.txt
+shell pip install -e .
+
+# Hack until I pull the database URL from the python code
+shell touch db.db3
 
 make
