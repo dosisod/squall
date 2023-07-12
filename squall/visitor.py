@@ -1,12 +1,18 @@
 import ast
+from dataclasses import dataclass
 
 from squall import util
 
 SQLITE_EXECUTE_FUNCS = {"execute", "executescript", "executemany"}
 
 
-# TODO: turn into a dataclass
-SquallError = tuple[int, str]
+@dataclass
+class SquallError:
+    error: str
+    line: int
+
+    def __str__(self) -> str:
+        return f"{self.line}: {self.error}"
 
 
 class SqliteStmtVisitor(ast.NodeVisitor):
@@ -55,7 +61,8 @@ class SqliteStmtVisitor(ast.NodeVisitor):
                 if isinstance(arg, ast.Constant) and isinstance(
                     arg.value, str
                 ):
+                    # TODO: don't hardcode database here
                     error = util.validate("db.db3", arg.value)
 
                     if error:
-                        self.errors.append((arg.lineno, error))
+                        self.errors.append(SquallError(error, line=arg.lineno))

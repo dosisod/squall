@@ -22,5 +22,5 @@ def get_sqlite_errors_from_file(file: Path) -> list[SquallError]:
 
 def main(files: Iterator[Path]) -> None:
     for file in files:
-        for line, error in get_sqlite_errors_from_file(file):
-            print(f"{file}:{line}: {error}")  # noqa: T201
+        for error in get_sqlite_errors_from_file(file):
+            print(f"{file}:{error}")  # noqa: T201
