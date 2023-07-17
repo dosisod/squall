@@ -1,4 +1,5 @@
 import ast
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -21,6 +22,12 @@ def get_sqlite_errors_from_file(file: Path) -> list[SquallError]:
 
 
 def main(files: Iterator[Path]) -> None:
+    had_error = False
+
     for file in files:
         for error in get_sqlite_errors_from_file(file):
             print(f"{file}:{error}")  # noqa: T201
+            had_error = True
+
+    if had_error:
+        sys.exit(1)

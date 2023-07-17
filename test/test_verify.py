@@ -24,8 +24,12 @@ from sqlite3 import connect
 db = connect("db.db3")
 
 db.execute("SELECT FROM users;")
+db.execute("")
 """
 
-    error, = get_sqlite_errors_from_code(code)
+    errors = get_sqlite_errors_from_code(code)
 
-    assert error == SquallError('near "FROM": syntax error', line=5)
+    assert errors == [
+        SquallError('near "FROM": syntax error', line=5),
+        SquallError("No SQL statement found", line=6),
+    ]

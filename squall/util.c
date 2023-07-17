@@ -36,10 +36,10 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 		err = sqlite3_prepare_v2(db, stmt, strlen(stmt), &prepared_stmt, &unused_sql);
 		if (err) return sqlite3_errmsg(db);
 
+		if (!prepared_stmt) return "No SQL statement found";
+
 		for (;;) {
 			err = sqlite3_step(prepared_stmt);
-
-			const char *error_msg = sqlite3_errmsg(db);
 
 			if (
 				err == SQLITE_ROW ||
@@ -47,9 +47,9 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 				err == SQLITE_READONLY
 			) break;
 
-			if (error_msg) {
+			if (err) {
 				sqlite3_finalize(prepared_stmt);
-				return error_msg;
+				return sqlite3_errmsg(db);
 			}
 		}
 
