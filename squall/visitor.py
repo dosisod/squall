@@ -23,6 +23,13 @@ class SqliteStmtVisitor(ast.NodeVisitor):
         self.symbols = {}
         self.errors = []
 
+    def visit_Import(self, node: ast.Import) -> None:
+        self.generic_visit(node)
+
+        for name in node.names:
+            if name.name == "sqlite3":
+                self.symbols[name.asname or name.name] = "sqlite3"
+
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         self.generic_visit(node)
 
@@ -34,12 +41,15 @@ class SqliteStmtVisitor(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign) -> None:
         self.generic_visit(node)
 
-        if (
+        if not (
             len(node.targets) == 1
             and isinstance(node.targets[0], ast.Name)
             and isinstance(node.value, ast.Call)
-            and isinstance(node.value.func, ast.Name)
-            and self.symbols.get(node.value.func.id) == "sqlite3.connect"
+        ):
+            return
+
+        if self.is_connect_call(node.value) or self.is_sqlite3_connect_call(
+            node.value
         ):
             self.symbols[node.targets[0].id] = "sqlite3.Connection"
 
@@ -66,3 +76,17 @@ class SqliteStmtVisitor(ast.NodeVisitor):
 
                     if error:
                         self.errors.append(SquallError(error, line=arg.lineno))
+
+    def is_connect_call(self, call: ast.Call) -> bool:
+        return (
+            isinstance(call.func, ast.Name)
+            and self.symbols.get(call.func.id) == "sqlite3.connect"
+        )
+
+    def is_sqlite3_connect_call(self, call: ast.Call) -> bool:
+        return (
+            isinstance(call.func, ast.Attribute)
+            and isinstance(call.func.value, ast.Name)
+            and self.symbols.get(call.func.value.id) == "sqlite3"
+            and call.func.attr == "connect"
+        )

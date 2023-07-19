@@ -1,0 +1,22 @@
+import sqlite3
+import sqlite3 as sqlite3_alias
+from sqlite3 import connect
+from sqlite3 import connect as connect_alias
+
+# test connection via `connect()` is tracked
+db = connect("db.db3")
+db.execute("SELECT FROM users;")
+
+
+# test connection via `connect()` via alias is tracked
+db2 = connect_alias("db.db3")
+db2.execute("SELECT FROM users;")
+
+
+# test connection via `sqlite3.connect()` is tracked
+db3 = sqlite3.connect("db.db3")
+db3.execute("SELECT invalid_sql;")
+
+# test connection via `sqlite3.connect()` imported as an alias is tracked
+db4 = sqlite3_alias.connect("db.db3")
+db4.execute("SELECT invalid_sql;")
