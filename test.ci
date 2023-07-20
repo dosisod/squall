@@ -7,7 +7,4 @@ shell apk add --no-cache gcc make musl-dev sqlite-dev
 shell pip install -r dev-requirements.txt
 shell pip install -e .
 
-# Hack until I pull the database URL from the python code
-shell touch db.db3
-
 make

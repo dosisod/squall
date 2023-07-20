@@ -2,6 +2,7 @@ import ast
 from dataclasses import dataclass
 
 from squall import util
+from squall.settings import Settings
 
 SQLITE_EXECUTE_FUNCS = {"execute", "executescript", "executemany"}
 
@@ -19,9 +20,12 @@ class SqliteStmtVisitor(ast.NodeVisitor):
     symbols: dict[str, str]
     errors: list[SquallError]
 
-    def __init__(self) -> None:
+    settings: Settings | None
+
+    def __init__(self, settings: Settings | None = None) -> None:
         self.symbols = {}
         self.errors = []
+        self.settings = settings
 
     def visit_Import(self, node: ast.Import) -> None:
         self.generic_visit(node)
@@ -72,10 +76,18 @@ class SqliteStmtVisitor(ast.NodeVisitor):
                     arg.value, str
                 ):
                     # TODO: don't hardcode database here
-                    error = util.validate("db.db3", arg.value)
+                    error = util.validate(self.db_url, arg.value)
 
                     if error:
                         self.errors.append(SquallError(error, line=arg.lineno))
+
+    @property
+    def db_url(self) -> str:
+        return (
+            str(self.settings.db)
+            if self.settings and self.settings.db
+            else ":memory:"
+        )
 
     def is_connect_call(self, call: ast.Call) -> bool:
         return (

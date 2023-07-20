@@ -1,8 +1,6 @@
-import sys
-from pathlib import Path
-
 from squall.main import main as _main
+from squall.settings import Settings
 
 
 def main() -> None:
-    _main(Path(x) for x in sys.argv[1:])
+    _main(Settings.from_args())

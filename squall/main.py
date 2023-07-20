@@ -1,31 +1,37 @@
 import ast
 import sys
-from collections.abc import Iterator
 from pathlib import Path
 
+from squall.settings import Settings
 from squall.visitor import SqliteStmtVisitor, SquallError
 
 
-def get_sqlite_errors_from_code(code: str) -> list[SquallError]:
+def get_sqlite_errors_from_code(
+    code: str,
+    settings: Settings | None = None,
+) -> list[SquallError]:
     tree = ast.parse(code)
 
-    visitor = SqliteStmtVisitor()
+    visitor = SqliteStmtVisitor(settings)
     visitor.visit(tree)
 
     return visitor.errors
 
 
-def get_sqlite_errors_from_file(file: Path) -> list[SquallError]:
+def get_sqlite_errors_from_file(
+    file: Path,
+    settings: Settings,
+) -> list[SquallError]:
     code = file.read_text()
 
-    return get_sqlite_errors_from_code(code)
+    return get_sqlite_errors_from_code(code, settings)
 
 
-def main(files: Iterator[Path]) -> None:
+def main(settings: Settings) -> None:
     had_error = False
 
-    for file in files:
-        for error in get_sqlite_errors_from_file(file):
+    for file in settings.files:
+        for error in get_sqlite_errors_from_file(file, settings):
             print(f"{file}:{error}")  # noqa: T201
             had_error = True
 
