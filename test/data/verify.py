@@ -20,3 +20,18 @@ db3.execute("SELECT invalid_sql;")
 # test connection via `sqlite3.connect()` imported as an alias is tracked
 db4 = sqlite3_alias.connect("db.db3")
 db4.execute("SELECT invalid_sql;")
+
+
+# test execution via cursor (from assignment)
+cursor = db.cursor()
+cursor.execute("SELECT invalid_sql;")
+
+# test execution via cursor (directly on connection)
+db.cursor().execute("SELECT invalid_sql;")
+
+
+# test execution directly on connection is tracked
+connect("db.db3").execute("SELECT invalid_sql;")
+
+# test execution directly on connection (via sqlite3 import) is tracked
+sqlite3.connect("db.db3").execute("SELECT invalid_sql;")

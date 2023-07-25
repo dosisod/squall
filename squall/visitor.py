@@ -5,6 +5,7 @@ from squall import util
 from squall.settings import Settings
 
 SQLITE_EXECUTE_FUNCS = {"execute", "executescript", "executemany"}
+SQL_EXECUTABLE_LIKE = {"sqlite3.Connection", "sqlite3.Cursor"}
 
 
 @dataclass
@@ -57,6 +58,9 @@ class SqliteStmtVisitor(ast.NodeVisitor):
         ):
             self.symbols[node.targets[0].id] = "sqlite3.Connection"
 
+        if self.is_cursor_call(node.value):
+            self.symbols[node.targets[0].id] = "sqlite3.Cursor"
+
     def visit_Call(self, node: ast.Call) -> None:
         self.generic_visit(node)
 
@@ -64,8 +68,10 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             callee = node.func.value
 
             if not (
-                isinstance(callee, ast.Name)
-                and self.symbols.get(callee.id) == "sqlite3.Connection"
+                self.is_execute_like_name(callee)
+                or self.is_cursor_call(callee)
+                or self.is_connect_call(callee)
+                or self.is_sqlite3_connect_call(callee)
             ):
                 return
 
@@ -75,7 +81,6 @@ class SqliteStmtVisitor(ast.NodeVisitor):
                 if isinstance(arg, ast.Constant) and isinstance(
                     arg.value, str
                 ):
-                    # TODO: don't hardcode database here
                     error = util.validate(self.db_url, arg.value)
 
                     if error:
@@ -89,16 +94,33 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             else ":memory:"
         )
 
-    def is_connect_call(self, call: ast.Call) -> bool:
+    def is_connect_call(self, call: ast.AST) -> bool:
         return (
-            isinstance(call.func, ast.Name)
+            isinstance(call, ast.Call)
+            and isinstance(call.func, ast.Name)
             and self.symbols.get(call.func.id) == "sqlite3.connect"
         )
 
-    def is_sqlite3_connect_call(self, call: ast.Call) -> bool:
+    def is_sqlite3_connect_call(self, call: ast.AST) -> bool:
         return (
-            isinstance(call.func, ast.Attribute)
+            isinstance(call, ast.Call)
+            and isinstance(call.func, ast.Attribute)
             and isinstance(call.func.value, ast.Name)
             and self.symbols.get(call.func.value.id) == "sqlite3"
             and call.func.attr == "connect"
+        )
+
+    def is_cursor_call(self, call: ast.AST) -> bool:
+        return (
+            isinstance(call, ast.Call)
+            and isinstance(call.func, ast.Attribute)
+            and isinstance(call.func.value, ast.Name)
+            and self.symbols.get(call.func.value.id) == "sqlite3.Connection"
+            and call.func.attr == "cursor"
+        )
+
+    def is_execute_like_name(self, name: ast.AST) -> bool:
+        return (
+            isinstance(name, ast.Name)
+            and self.symbols.get(name.id) in SQL_EXECUTABLE_LIKE
         )

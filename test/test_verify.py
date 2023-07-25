@@ -34,6 +34,10 @@ def test_verify_invalid_sql() -> None:
         SquallError(error='near "FROM": syntax error', line=13),
         SquallError(error="no such column: invalid_sql", line=18),
         SquallError(error="no such column: invalid_sql", line=22),
+        SquallError(error="no such column: invalid_sql", line=27),
+        SquallError(error="no such column: invalid_sql", line=30),
+        SquallError(error="no such column: invalid_sql", line=34),
+        SquallError(error="no such column: invalid_sql", line=37),
     ]
 
 
