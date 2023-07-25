@@ -9,6 +9,7 @@ from pathlib import Path
 class Settings:
     files: list[Path]
     db: Path | None = None
+    debug: bool = False
 
     @classmethod
     def from_args(cls, *args: str) -> Settings:
@@ -17,6 +18,7 @@ class Settings:
         return cls(
             files=[Path(x) for x in namespace.files],
             db=Path(namespace.db) if namespace.db else None,
+            debug=namespace.debug,
         )
 
 
@@ -25,5 +27,6 @@ def parse_args(*args: str) -> Namespace:
 
     parser.add_argument("files", nargs="+")
     parser.add_argument("--db")
+    parser.add_argument("--debug", action="store_true")
 
     return parser.parse_args(args or None)

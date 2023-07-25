@@ -12,6 +12,9 @@ def get_sqlite_errors_from_code(
 ) -> list[SquallError]:
     tree = ast.parse(code)
 
+    if settings and settings.debug:
+        print(ast.dump(tree, indent=2))  # noqa: T201
+
     visitor = SqliteStmtVisitor(settings)
     visitor.visit(tree)
 
