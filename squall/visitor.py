@@ -46,20 +46,10 @@ class SqliteStmtVisitor(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign) -> None:
         self.generic_visit(node)
 
-        if not (
-            len(node.targets) == 1
-            and isinstance(node.targets[0], ast.Name)
-            and isinstance(node.value, ast.Call)
-        ):
+        if len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
             return
 
-        if self.is_connect_call(node.value) or self.is_sqlite3_connect_call(
-            node.value
-        ):
-            self.symbols[node.targets[0].id] = "sqlite3.Connection"
-
-        if self.is_cursor_call(node.value):
-            self.symbols[node.targets[0].id] = "sqlite3.Cursor"
+        self.update_symbol_table(node.targets[0].id, node.value)
 
     def visit_Call(self, node: ast.Call) -> None:
         self.generic_visit(node)
@@ -85,6 +75,18 @@ class SqliteStmtVisitor(ast.NodeVisitor):
 
                     if error:
                         self.errors.append(SquallError(error, line=arg.lineno))
+
+    def visit_With(self, node: ast.With) -> None:
+        for item in node.items:
+            value = item.context_expr
+            name = item.optional_vars
+
+            if not (name and isinstance(name, ast.Name)):
+                continue
+
+            self.update_symbol_table(name.id, value)
+
+        self.generic_visit(node)
 
     @property
     def db_url(self) -> str:
@@ -124,3 +126,15 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             isinstance(name, ast.Name)
             and self.symbols.get(name.id) in SQL_EXECUTABLE_LIKE
         )
+
+    def update_symbol_table(self, id: str, expr: ast.AST) -> None:
+        if self.is_connect_call(expr) or self.is_sqlite3_connect_call(expr):
+            ty = "sqlite3.Connection"
+
+        elif self.is_cursor_call(expr):
+            ty = "sqlite3.Cursor"
+
+        else:
+            return
+
+        self.symbols[id] = ty

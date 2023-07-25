@@ -35,3 +35,8 @@ connect("db.db3").execute("SELECT invalid_sql;")
 
 # test execution directly on connection (via sqlite3 import) is tracked
 sqlite3.connect("db.db3").execute("SELECT invalid_sql;")
+
+
+# test execution via context manager
+with connect(":memory:") as db:
+    db.execute("SELECT invalid_sql;")

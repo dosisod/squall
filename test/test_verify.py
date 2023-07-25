@@ -7,6 +7,8 @@ from squall.visitor import SquallError
 
 def test_normal_code_doesnt_emit_sqlite_errors() -> None:
     code = """\
+from contextlib import nullcontext
+
 class DB:
     def execute(self, sql: str) -> None:
         pass
@@ -19,6 +21,11 @@ db.execute("")
 
 # normal assignment, dont do anything
 x = 1
+
+
+# empty context manager, do nothing
+with nullcontext():
+    pass
 """
 
     assert not get_sqlite_errors_from_code(code)
@@ -38,6 +45,7 @@ def test_verify_invalid_sql() -> None:
         SquallError(error="no such column: invalid_sql", line=30),
         SquallError(error="no such column: invalid_sql", line=34),
         SquallError(error="no such column: invalid_sql", line=37),
+        SquallError(error="no such column: invalid_sql", line=42),
     ]
 
 
