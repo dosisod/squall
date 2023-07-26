@@ -40,3 +40,18 @@ sqlite3.connect("db.db3").execute("SELECT invalid_sql;")
 # test execution via context manager
 with connect(":memory:") as db:
     db.execute("SELECT invalid_sql;")
+
+
+# test execution via function return value
+def f_annotated() -> sqlite3.Connection:  # type: ignore
+    # if there is a return type annotation, trust it.
+    pass
+
+f_annotated().execute("SELECT invalid_sql;")
+
+
+# test execution via function return value (using string type annotation)
+def f_str_annotated() -> "sqlite3.Connection":  # type: ignore
+    pass
+
+f_str_annotated().execute("SELECT invalid_sql;")

@@ -46,6 +46,8 @@ def test_verify_invalid_sql() -> None:
         SquallError(error="no such column: invalid_sql", line=34),
         SquallError(error="no such column: invalid_sql", line=37),
         SquallError(error="no such column: invalid_sql", line=42),
+        SquallError(error="no such column: invalid_sql", line=50),
+        SquallError(error="no such column: invalid_sql", line=57),
     ]
 
 

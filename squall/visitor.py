@@ -1,5 +1,6 @@
 import ast
 from dataclasses import dataclass
+from typing import TypeGuard
 
 from squall import util
 from squall.settings import Settings
@@ -24,7 +25,14 @@ class SqliteStmtVisitor(ast.NodeVisitor):
     settings: Settings | None
 
     def __init__(self, settings: Settings | None = None) -> None:
-        self.symbols = {}
+        self.symbols = {
+            "sqlite3.connect()": "sqlite3.Connection",
+            "sqlite3.Connection.cursor()": "sqlite3.Cursor",
+        }
+
+        for symbol in SQL_EXECUTABLE_LIKE:
+            self.symbols[symbol] = symbol
+
         self.errors = []
         self.settings = settings
 
@@ -55,14 +63,7 @@ class SqliteStmtVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
         if isinstance(node.func, ast.Attribute):
-            callee = node.func.value
-
-            if not (
-                self.is_execute_like_name(callee)
-                or self.is_cursor_call(callee)
-                or self.is_connect_call(callee)
-                or self.is_sqlite3_connect_call(callee)
-            ):
+            if self.get_symbol(node.func.value) not in SQL_EXECUTABLE_LIKE:
                 return
 
             if node.func.attr in SQLITE_EXECUTE_FUNCS:
@@ -88,6 +89,16 @@ class SqliteStmtVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.generic_visit(node)
+
+        if node.returns:
+            if symbol := self.get_symbol(node.returns):
+                self.symbols[f"{node.name}()"] = symbol
+
+            if self.is_sqlite3_string_annotation(node.returns):
+                self.symbols[f"{node.name}()"] = node.returns.value
+
     @property
     def db_url(self) -> str:
         return (
@@ -96,45 +107,39 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             else ":memory:"
         )
 
-    def is_connect_call(self, call: ast.AST) -> bool:
+    def is_sqlite3_string_annotation(
+        self, const: ast.AST
+    ) -> TypeGuard[ast.Constant]:
         return (
-            isinstance(call, ast.Call)
-            and isinstance(call.func, ast.Name)
-            and self.symbols.get(call.func.id) == "sqlite3.connect"
-        )
-
-    def is_sqlite3_connect_call(self, call: ast.AST) -> bool:
-        return (
-            isinstance(call, ast.Call)
-            and isinstance(call.func, ast.Attribute)
-            and isinstance(call.func.value, ast.Name)
-            and self.symbols.get(call.func.value.id) == "sqlite3"
-            and call.func.attr == "connect"
-        )
-
-    def is_cursor_call(self, call: ast.AST) -> bool:
-        return (
-            isinstance(call, ast.Call)
-            and isinstance(call.func, ast.Attribute)
-            and isinstance(call.func.value, ast.Name)
-            and self.symbols.get(call.func.value.id) == "sqlite3.Connection"
-            and call.func.attr == "cursor"
-        )
-
-    def is_execute_like_name(self, name: ast.AST) -> bool:
-        return (
-            isinstance(name, ast.Name)
-            and self.symbols.get(name.id) in SQL_EXECUTABLE_LIKE
+            isinstance(const, ast.Constant)
+            and const.value in SQL_EXECUTABLE_LIKE
         )
 
     def update_symbol_table(self, id: str, expr: ast.AST) -> None:
-        if self.is_connect_call(expr) or self.is_sqlite3_connect_call(expr):
-            ty = "sqlite3.Connection"
+        if symbol := self.get_symbol(expr):
+            self.symbols[id] = symbol
 
-        elif self.is_cursor_call(expr):
-            ty = "sqlite3.Cursor"
+    def get_symbol(self, node: ast.AST) -> str | None:
+        name = self.get_name(node)
 
-        else:
-            return
+        if "!" in name:
+            return None
 
-        self.symbols[id] = ty
+        return self.symbols.get(name)
+
+    def get_name(self, node: ast.AST) -> str:
+        if isinstance(node, ast.Name):
+            return node.id
+
+        if isinstance(node, ast.Attribute):
+            name = self.get_name(node.value)
+            name = self.symbols.get(name, name)
+            return f"{name}.{node.attr}"
+
+        if isinstance(node, ast.Call):
+            name = self.get_name(node.func)
+            name = self.symbols.get(name, name)
+            return f"{name}()"
+
+        # Poison value to cause symbol lookup to fail
+        return "!"
