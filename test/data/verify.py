@@ -74,5 +74,12 @@ class C:
     db: sqlite3.Connection
     db2: "sqlite3.Connection"
 
+    def f(self) -> None:
+        self.db.execute("SELECT invalid_sql")
+
+    @classmethod
+    def f2(cls) -> None:
+        cls.db.execute("SELECT invalid_sql")
+
 C().db.execute("SELECT invalid_sql")
 C().db2.execute("SELECT invalid_sql")

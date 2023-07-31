@@ -125,7 +125,15 @@ class SqliteStmtVisitor(ast.NodeVisitor):
 
             self.symbols[f"{node.name}()"] = node.name
 
+        # TODO: don't assume self and cls are always a part of the class, even
+        # though they most likely are.
+        self.symbols["self"] = node.name
+        self.symbols["cls"] = node.name
+
         self.generic_visit(node)
+
+        del self.symbols["self"]
+        del self.symbols["cls"]
 
     @property
     def db_url(self) -> str:
