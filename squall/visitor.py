@@ -90,14 +90,22 @@ class SqliteStmtVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self.generic_visit(node)
-
         if node.returns:
             if symbol := self.get_symbol(node.returns):
                 self.symbols[f"{node.name}()"] = symbol
 
             if self.is_sqlite3_string_annotation(node.returns):
                 self.symbols[f"{node.name}()"] = node.returns.value
+
+        for arg in node.args.args + node.args.kwonlyargs:
+            if arg.annotation:
+                if symbol := self.get_symbol(arg.annotation):
+                    self.symbols[f"{arg.arg}"] = symbol
+
+                if self.is_sqlite3_string_annotation(arg.annotation):
+                    self.symbols[f"{arg.arg}"] = arg.annotation.value
+
+        self.generic_visit(node)
 
     @property
     def db_url(self) -> str:

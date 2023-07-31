@@ -55,3 +55,15 @@ def f_str_annotated() -> "sqlite3.Connection":  # type: ignore
     pass
 
 f_str_annotated().execute("SELECT invalid_sql;")
+
+
+# test execution via typed argument
+def f_params(
+    # test non-kwarg with normal annotation
+    db: sqlite3.Connection,
+    *,
+    # test kwarg with string annotation
+    db2: "sqlite3.Connection"
+) -> None:
+    db.execute("SELECT invalid_sql;")
+    db2.execute("SELECT invalid_sql;")
