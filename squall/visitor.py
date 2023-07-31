@@ -94,7 +94,7 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             if symbol := self.get_symbol(node.returns):
                 self.symbols[f"{node.name}()"] = symbol
 
-            if self.is_sqlite3_string_annotation(node.returns):
+            elif self.is_sqlite3_string_annotation(node.returns):
                 self.symbols[f"{node.name}()"] = node.returns.value
 
         for arg in node.args.args + node.args.kwonlyargs:
@@ -102,8 +102,28 @@ class SqliteStmtVisitor(ast.NodeVisitor):
                 if symbol := self.get_symbol(arg.annotation):
                     self.symbols[f"{arg.arg}"] = symbol
 
-                if self.is_sqlite3_string_annotation(arg.annotation):
+                elif self.is_sqlite3_string_annotation(arg.annotation):
                     self.symbols[f"{arg.arg}"] = arg.annotation.value
+
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        for stmt in node.body:
+            if not (
+                isinstance(stmt, ast.AnnAssign)
+                and isinstance(stmt.target, ast.Name)
+            ):
+                continue
+
+            name = f"{node.name}.{stmt.target.id}"
+
+            if symbol := self.get_symbol(stmt.annotation):
+                self.symbols[name] = symbol
+
+            elif self.is_sqlite3_string_annotation(stmt.annotation):
+                self.symbols[name] = stmt.annotation.value
+
+            self.symbols[f"{node.name}()"] = node.name
 
         self.generic_visit(node)
 

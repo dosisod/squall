@@ -67,3 +67,12 @@ def f_params(
 ) -> None:
     db.execute("SELECT invalid_sql;")
     db2.execute("SELECT invalid_sql;")
+
+
+# test execution via class fields
+class C:
+    db: sqlite3.Connection
+    db2: "sqlite3.Connection"
+
+C().db.execute("SELECT invalid_sql")
+C().db2.execute("SELECT invalid_sql")
