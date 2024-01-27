@@ -23,7 +23,14 @@ PyMODINIT_FUNC PyInit_util(void) {
 	return PyModule_Create(&util_module);
 }
 
-static const char *validate_stmt(const char *db_url, const char *stmt) {
+typedef enum {
+	SQUALL_QUERY,
+	SQUALL_EXECUTE,
+	SQUALL_EXECUTESCRIPT,
+	SQUALL_EXECUTEMANY,
+} ExecutionType;
+
+static const char *validate_stmt(const char *db_url, const char *stmt, ExecutionType exec_type) {
 	sqlite3 *db = NULL;
 
 	int err = sqlite3_open_v2(db_url, &db, SQLITE_OPEN_READONLY, NULL);
@@ -44,6 +51,10 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 
 			// whitespace after a statement, no harm
 			return NULL;
+		}
+
+		if (stmt_count > 0 && (exec_type == SQUALL_EXECUTE || exec_type == SQUALL_EXECUTEMANY)) {
+			return "Cannot use multiple SQL statements with `execute` or `executemany`";
 		}
 
 		for (;;) {
@@ -75,12 +86,27 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 PyObject *util_validate(PyObject *self, PyObject *args) {
 	const char *db_url;
 	const char *stmt;
+	const char *exec_func_name = NULL;
+	ExecutionType exec_type = SQUALL_QUERY;
 
-	if (!PyArg_ParseTuple(args, "ss", &db_url, &stmt)) {
+	if (!PyArg_ParseTuple(args, "ss|s", &db_url, &stmt, &exec_func_name)) {
 		return NULL;
 	}
 
-	const char *err = validate_stmt(db_url, stmt);
+	if (!exec_func_name) {
+		// do nothing
+	}
+	else if (strcmp(exec_func_name, "execute") == 0) {
+		exec_type = SQUALL_EXECUTE;
+	}
+	else if (strcmp(exec_func_name, "executemany") == 0) {
+		exec_type = SQUALL_EXECUTEMANY;
+	}
+	else if (strcmp(exec_func_name, "executescript") == 0) {
+		exec_type = SQUALL_EXECUTESCRIPT;
+	}
+
+	const char *err = validate_stmt(db_url, stmt, exec_type);
 
 	if (err) return PyUnicode_FromString(err);
 

@@ -35,6 +35,9 @@ db = sqlite3.connect(":memory:")
 db.execute("SELECT 1")
 db.execute("SELECT 1;")
 db.execute("SELECT 1; ")
+
+# ok to execute multiple statements with executescript()
+db.executescript("SELECT 1; SELECT 2")
 """
 
     assert not get_sqlite_errors_from_code(code)
@@ -64,6 +67,8 @@ def test_verify_invalid_sql() -> None:
         SquallError(error="no such column: invalid_sql", line=84),
         SquallError(error="no such column: invalid_sql", line=85),
         SquallError(error="no such column: invalid_sql", line=89),
+        SquallError(error="Cannot use multiple SQL statements with `execute` or `executemany`", line=93),
+        SquallError(error="Cannot use multiple SQL statements with `execute` or `executemany`", line=94),
     ]
 
 

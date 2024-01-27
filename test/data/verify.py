@@ -87,3 +87,8 @@ C().db2.execute("SELECT invalid_sql")
 
 # ensure multiple statements are checked if they exist
 db.executescript("SELECT 1; SELECT invalid_sql")
+
+
+# disallow multiple statements unless you're using executescript()
+db.execute("SELECT 1; SELECT 2")
+db.executemany("SELECT 1; SELECT 2", [])

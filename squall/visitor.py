@@ -72,7 +72,7 @@ class SqliteStmtVisitor(ast.NodeVisitor):
                 if isinstance(arg, ast.Constant) and isinstance(
                     arg.value, str
                 ):
-                    error = util.validate(self.db_url, arg.value)
+                    error = util.validate(self.db_url, arg.value, node.func.attr)
 
                     if error:
                         self.errors.append(SquallError(error, line=arg.lineno))
