@@ -30,7 +30,7 @@ typedef enum {
 	SQUALL_EXECUTEMANY,
 } ExecutionType;
 
-static const char *validate_stmt(
+static PyObject *validate_stmt(
 	const char *db_url,
 	const char *stmt,
 	ExecutionType exec_type,
@@ -39,7 +39,7 @@ static const char *validate_stmt(
 	sqlite3 *db = NULL;
 
 	int err = sqlite3_open_v2(db_url, &db, SQLITE_OPEN_READONLY, NULL);
-	if (err) return sqlite3_errmsg(db);
+	if (err) return PyUnicode_FromString(sqlite3_errmsg(db));
 
 	sqlite3_stmt *prepared_stmt = NULL;
 	const char *unused_sql = NULL;
@@ -47,19 +47,23 @@ static const char *validate_stmt(
 
 	for (;;) {
 		err = sqlite3_prepare_v2(db, stmt, strlen(stmt), &prepared_stmt, &unused_sql);
-		if (err) return sqlite3_errmsg(db);
+		if (err) return PyUnicode_FromString(sqlite3_errmsg(db));
 
 		if (!prepared_stmt) {
 			if (stmt_count == 0) {
-				return "No SQL statement found";
+				return PyUnicode_FromString("No SQL statement found");
 			}
 
 			// whitespace after a statement, no harm
-			return NULL;
+			Py_INCREF(Py_None);
+			return Py_None;
 		}
 
 		if (stmt_count > 0 && (exec_type == SQUALL_EXECUTE || exec_type == SQUALL_EXECUTEMANY)) {
-			return "Cannot use multiple SQL statements with `execute` or `executemany`";
+			return PyUnicode_FromFormat(
+				"Cannot use multiple SQL statements with `%s`",
+				exec_type == SQUALL_EXECUTE ? "execute" : "executemany"
+			);
 		}
 
 		if (query_param_count != -1) {
@@ -67,8 +71,11 @@ static const char *validate_stmt(
 			int param_count = sqlite3_bind_parameter_count(prepared_stmt);
 
 			if (param_count != query_param_count) {
-				// TODO: add expected and received params to error message
-				return "Mismatched number of args and query params";
+				return PyUnicode_FromFormat(
+					"Expected %i query parameters, got %i instead",
+					param_count,
+					query_param_count
+				);
 			}
 		}
 
@@ -83,7 +90,7 @@ static const char *validate_stmt(
 
 			if (err) {
 				sqlite3_finalize(prepared_stmt);
-				return sqlite3_errmsg(db);
+				return PyUnicode_FromString(sqlite3_errmsg(db));
 			}
 		}
 
@@ -95,7 +102,8 @@ static const char *validate_stmt(
 		stmt_count++;
 	}
 
-	return NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 PyObject *util_validate(PyObject *self, PyObject *args) {
@@ -122,10 +130,5 @@ PyObject *util_validate(PyObject *self, PyObject *args) {
 		exec_type = SQUALL_EXECUTESCRIPT;
 	}
 
-	const char *err = validate_stmt(db_url, stmt, exec_type, query_param_count);
-
-	if (err) return PyUnicode_FromString(err);
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	return validate_stmt(db_url, stmt, exec_type, query_param_count);
 }

@@ -88,19 +88,15 @@ def test_verify_invalid_sql() -> None:
         SquallError(error="no such column: invalid_sql", line=84),
         SquallError(error="no such column: invalid_sql", line=85),
         SquallError(error="no such column: invalid_sql", line=89),
-        SquallError(
-            error="Cannot use multiple SQL statements with `execute` or `executemany`", line=93
-        ),
-        SquallError(
-            error="Cannot use multiple SQL statements with `execute` or `executemany`", line=94
-        ),
-        SquallError(error="Mismatched number of args and query params", line=98),
-        SquallError(error="Mismatched number of args and query params", line=99),
-        SquallError(error="Mismatched number of args and query params", line=100),
-        SquallError(error="Mismatched number of args and query params", line=101),
-        SquallError(error="Mismatched number of args and query params", line=102),
-        SquallError(error="Mismatched number of args and query params", line=103),
-        SquallError(error="Mismatched number of args and query params", line=104),
+        SquallError(error="Cannot use multiple SQL statements with `execute`", line=93),
+        SquallError(error="Cannot use multiple SQL statements with `executemany`", line=94),
+        SquallError(error="Expected 0 query parameters, got 1 instead", line=98),
+        SquallError(error="Expected 1 query parameters, got 0 instead", line=99),
+        SquallError(error="Expected 1 query parameters, got 0 instead", line=100),
+        SquallError(error="Expected 2 query parameters, got 0 instead", line=101),
+        SquallError(error="Expected 2 query parameters, got 1 instead", line=102),
+        SquallError(error="Expected 1 query parameters, got 2 instead", line=103),
+        SquallError(error="Expected 1 query parameters, got 2 instead", line=104),
     ]
 
 
