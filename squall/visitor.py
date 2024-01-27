@@ -62,39 +62,46 @@ class SqliteStmtVisitor(ast.NodeVisitor):
     def visit_Call(self, node: ast.Call) -> None:
         self.generic_visit(node)
 
+        if len(node.args) == 0:
+            # execute() funcs require at least 1 arg, so bail early if this isnt the case
+            return
+
         if isinstance(node.func, ast.Attribute):
             if self.get_symbol(node.func.value) not in SQL_EXECUTABLE_LIKE:
                 return
 
             if node.func.attr in SQLITE_EXECUTE_FUNCS:
-                arg = node.args[0]
+                query = node.args[0]
 
-                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                    query_param_count = 0
-                    arg_count = len(node.args)
-
-                    if arg_count == 1:
-                        query_param_count = 0
-
-                    elif arg_count == 2:
-                        query_params = node.args[1]
-
-                        if isinstance(query_params, ast.List | ast.Tuple):
-                            if any(isinstance(param, ast.Starred) for param in query_params.elts):
-                                query_param_count = -1
-
-                            else:
-                                query_param_count = len(query_params.elts)
+                if isinstance(query, ast.Constant) and isinstance(query.value, str):
+                    query_param_count = self.get_query_param_count(node.args)
 
                     error = util.validate(
                         self.db_url,
-                        arg.value,
+                        query.value,
                         node.func.attr,
                         query_param_count,
                     )
 
                     if error:
-                        self.errors.append(SquallError(error, line=arg.lineno))
+                        self.errors.append(SquallError(error, line=query.lineno))
+
+    def get_query_param_count(self, args: list[ast.expr]) -> int:
+        arg_count = len(args)
+
+        if arg_count == 1:
+            return 0
+
+        if arg_count == 2:
+            query_params = args[1]
+
+            if isinstance(query_params, ast.List | ast.Tuple):
+                if any(isinstance(param, ast.Starred) for param in query_params.elts):
+                    return -1
+
+                return len(query_params.elts)
+
+        return -1
 
     def visit_With(self, node: ast.With) -> None:
         for item in node.items:

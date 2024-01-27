@@ -50,6 +50,15 @@ db.execute("SELECT ?, ?", (1, 2))
 
 # ignore param count when using star exprs
 db.execute("SELECT 1", [*[1, 2, 3]])
+
+
+# don't try to deduce param count for identifiers
+args = [1]
+db.execute("SELECT 1", args)
+
+
+# silently ignore execute without sql statement as its a type error, not a squall error
+db.execute()
 """
 
     assert not get_sqlite_errors_from_code(code)
