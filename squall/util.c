@@ -4,10 +4,16 @@
 
 #include <sqlite3.h>
 
+#if __GNUC__ || __clang__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
 PyObject *util_validate(PyObject *self, PyObject *args, PyObject *kwargs);
 
 static PyMethodDef util_methods[] = {
-	{"validate", util_validate, METH_VARARGS | METH_KEYWORDS, NULL},
+	{"validate", _PyCFunction_CAST(util_validate), METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
@@ -106,7 +112,7 @@ static PyObject *validate_stmt(
 	return Py_None;
 }
 
-PyObject *util_validate(PyObject *self, PyObject *args, PyObject *kwargs) {
+PyObject *util_validate(UNUSED PyObject *self, PyObject *args, PyObject *kwargs) {
 	const char *db_url;
 	const char *stmt;
 	const char *exec_func_name = NULL;
