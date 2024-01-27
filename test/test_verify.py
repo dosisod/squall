@@ -102,3 +102,9 @@ def test_verify_invalid_sql() -> None:
 
 def test_empty_sql_is_invalid() -> None:
     assert validate(":memory:", "") == "No SQL statement found"
+
+
+def test_kwargs_are_allowed() -> None:
+    err = validate(db_url=":memory:", stmt="", exec_func="execute", query_param_count=0)
+
+    assert err == "No SQL statement found"

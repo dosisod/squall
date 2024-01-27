@@ -4,10 +4,10 @@
 
 #include <sqlite3.h>
 
-PyObject *util_validate(PyObject *self, PyObject *args);
+PyObject *util_validate(PyObject *self, PyObject *args, PyObject *kwargs);
 
 static PyMethodDef util_methods[] = {
-	{"validate", util_validate, METH_VARARGS, NULL},
+	{"validate", util_validate, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
@@ -106,14 +106,16 @@ static PyObject *validate_stmt(
 	return Py_None;
 }
 
-PyObject *util_validate(PyObject *self, PyObject *args) {
+PyObject *util_validate(PyObject *self, PyObject *args, PyObject *kwargs) {
 	const char *db_url;
 	const char *stmt;
 	const char *exec_func_name = NULL;
 	ExecutionType exec_type = SQUALL_QUERY;
 	int query_param_count = -1;
 
-	if (!PyArg_ParseTuple(args, "ss|si", &db_url, &stmt, &exec_func_name, &query_param_count)) {
+	static char *kwarg_names[] = {"db_url", "stmt", "exec_func", "query_param_count", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ss|si", kwarg_names, &db_url, &stmt, &exec_func_name, &query_param_count)) {
 		return NULL;
 	}
 
