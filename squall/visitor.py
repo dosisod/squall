@@ -69,9 +69,7 @@ class SqliteStmtVisitor(ast.NodeVisitor):
             if node.func.attr in SQLITE_EXECUTE_FUNCS:
                 arg = node.args[0]
 
-                if isinstance(arg, ast.Constant) and isinstance(
-                    arg.value, str
-                ):
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                     error = util.validate(self.db_url, arg.value, node.func.attr)
 
                     if error:
@@ -109,10 +107,7 @@ class SqliteStmtVisitor(ast.NodeVisitor):
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         for stmt in node.body:
-            if not (
-                isinstance(stmt, ast.AnnAssign)
-                and isinstance(stmt.target, ast.Name)
-            ):
+            if not (isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)):
                 continue
 
             name = f"{node.name}.{stmt.target.id}"
@@ -137,19 +132,10 @@ class SqliteStmtVisitor(ast.NodeVisitor):
 
     @property
     def db_url(self) -> str:
-        return (
-            str(self.settings.db)
-            if self.settings and self.settings.db
-            else ":memory:"
-        )
+        return str(self.settings.db) if self.settings and self.settings.db else ":memory:"
 
-    def is_sqlite3_string_annotation(
-        self, const: ast.AST
-    ) -> TypeGuard[ast.Constant]:
-        return (
-            isinstance(const, ast.Constant)
-            and const.value in SQL_EXECUTABLE_LIKE
-        )
+    def is_sqlite3_string_annotation(self, const: ast.AST) -> TypeGuard[ast.Constant]:
+        return isinstance(const, ast.Constant) and const.value in SQL_EXECUTABLE_LIKE
 
     def update_symbol_table(self, id: str, expr: ast.AST) -> None:
         if symbol := self.get_symbol(expr):

@@ -67,8 +67,12 @@ def test_verify_invalid_sql() -> None:
         SquallError(error="no such column: invalid_sql", line=84),
         SquallError(error="no such column: invalid_sql", line=85),
         SquallError(error="no such column: invalid_sql", line=89),
-        SquallError(error="Cannot use multiple SQL statements with `execute` or `executemany`", line=93),
-        SquallError(error="Cannot use multiple SQL statements with `execute` or `executemany`", line=94),
+        SquallError(
+            error="Cannot use multiple SQL statements with `execute` or `executemany`", line=93
+        ),
+        SquallError(
+            error="Cannot use multiple SQL statements with `execute` or `executemany`", line=94
+        ),
     ]
 
 
