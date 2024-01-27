@@ -83,3 +83,7 @@ class C:
 
 C().db.execute("SELECT invalid_sql")
 C().db2.execute("SELECT invalid_sql")
+
+
+# ensure multiple statements are checked if they exist
+db.executescript("SELECT 1; SELECT invalid_sql")
