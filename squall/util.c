@@ -31,12 +31,20 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 
 	sqlite3_stmt *prepared_stmt = NULL;
 	const char *unused_sql = NULL;
+	int stmt_count = 0;
 
 	for (;;) {
 		err = sqlite3_prepare_v2(db, stmt, strlen(stmt), &prepared_stmt, &unused_sql);
 		if (err) return sqlite3_errmsg(db);
 
-		if (!prepared_stmt) return "No SQL statement found";
+		if (!prepared_stmt) {
+			if (stmt_count == 0) {
+				return "No SQL statement found";
+			}
+
+			// whitespace after a statement, no harm
+			return NULL;
+		}
 
 		for (;;) {
 			err = sqlite3_step(prepared_stmt);
@@ -58,6 +66,7 @@ static const char *validate_stmt(const char *db_url, const char *stmt) {
 		if (!unused_sql || !*unused_sql) break;
 
 		stmt = unused_sql;
+		stmt_count++;
 	}
 
 	return NULL;

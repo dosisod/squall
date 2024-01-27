@@ -7,6 +7,7 @@ from squall.visitor import SquallError
 
 def test_normal_code_doesnt_emit_sqlite_errors() -> None:
     code = """\
+import sqlite3
 from contextlib import nullcontext
 
 class DB:
@@ -26,6 +27,14 @@ x = 1
 # empty context manager, do nothing
 with nullcontext():
     pass
+
+
+db = sqlite3.connect(":memory:")
+
+# missing semicolon, existing semicolon, and whitespace after semicolon are ok
+db.execute("SELECT 1")
+db.execute("SELECT 1;")
+db.execute("SELECT 1; ")
 """
 
     assert not get_sqlite_errors_from_code(code)
@@ -54,6 +63,7 @@ def test_verify_invalid_sql() -> None:
         SquallError(error="no such column: invalid_sql", line=82),
         SquallError(error="no such column: invalid_sql", line=84),
         SquallError(error="no such column: invalid_sql", line=85),
+        SquallError(error="no such column: invalid_sql", line=89),
     ]
 
 
