@@ -92,3 +92,13 @@ db.executescript("SELECT 1; SELECT invalid_sql")
 # disallow multiple statements unless you're using executescript()
 db.execute("SELECT 1; SELECT 2")
 db.executemany("SELECT 1; SELECT 2", [])
+
+
+# disallow mismatched number of query params and passed params
+db.execute("SELECT 1", [1])
+db.execute("SELECT ?")
+db.execute("SELECT ?", [])
+db.execute("SELECT ?, ?", [])
+db.execute("SELECT ?, ?", [1])
+db.execute("SELECT ?", [1, 2])
+db.execute("SELECT ?", (1, 2))

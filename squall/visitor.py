@@ -70,7 +70,28 @@ class SqliteStmtVisitor(ast.NodeVisitor):
                 arg = node.args[0]
 
                 if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                    error = util.validate(self.db_url, arg.value, node.func.attr)
+                    query_param_count = 0
+                    arg_count = len(node.args)
+
+                    if arg_count == 1:
+                        query_param_count = 0
+
+                    elif arg_count == 2:
+                        query_params = node.args[1]
+
+                        if isinstance(query_params, ast.List | ast.Tuple):
+                            if any(isinstance(param, ast.Starred) for param in query_params.elts):
+                                query_param_count = -1
+
+                            else:
+                                query_param_count = len(query_params.elts)
+
+                    error = util.validate(
+                        self.db_url,
+                        arg.value,
+                        node.func.attr,
+                        query_param_count,
+                    )
 
                     if error:
                         self.errors.append(SquallError(error, line=arg.lineno))

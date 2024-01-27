@@ -30,7 +30,12 @@ typedef enum {
 	SQUALL_EXECUTEMANY,
 } ExecutionType;
 
-static const char *validate_stmt(const char *db_url, const char *stmt, ExecutionType exec_type) {
+static const char *validate_stmt(
+	const char *db_url,
+	const char *stmt,
+	ExecutionType exec_type,
+	int query_param_count
+) {
 	sqlite3 *db = NULL;
 
 	int err = sqlite3_open_v2(db_url, &db, SQLITE_OPEN_READONLY, NULL);
@@ -55,6 +60,16 @@ static const char *validate_stmt(const char *db_url, const char *stmt, Execution
 
 		if (stmt_count > 0 && (exec_type == SQUALL_EXECUTE || exec_type == SQUALL_EXECUTEMANY)) {
 			return "Cannot use multiple SQL statements with `execute` or `executemany`";
+		}
+
+		if (query_param_count != -1) {
+			// only check number of args in query if we know number of query parameters
+			int param_count = sqlite3_bind_parameter_count(prepared_stmt);
+
+			if (param_count != query_param_count) {
+				// TODO: add expected and received params to error message
+				return "Mismatched number of args and query params";
+			}
 		}
 
 		for (;;) {
@@ -88,8 +103,9 @@ PyObject *util_validate(PyObject *self, PyObject *args) {
 	const char *stmt;
 	const char *exec_func_name = NULL;
 	ExecutionType exec_type = SQUALL_QUERY;
+	int query_param_count = -1;
 
-	if (!PyArg_ParseTuple(args, "ss|s", &db_url, &stmt, &exec_func_name)) {
+	if (!PyArg_ParseTuple(args, "ss|si", &db_url, &stmt, &exec_func_name, &query_param_count)) {
 		return NULL;
 	}
 
@@ -106,7 +122,7 @@ PyObject *util_validate(PyObject *self, PyObject *args) {
 		exec_type = SQUALL_EXECUTESCRIPT;
 	}
 
-	const char *err = validate_stmt(db_url, stmt, exec_type);
+	const char *err = validate_stmt(db_url, stmt, exec_type, query_param_count);
 
 	if (err) return PyUnicode_FromString(err);
 

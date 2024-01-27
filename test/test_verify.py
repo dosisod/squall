@@ -38,6 +38,18 @@ db.execute("SELECT 1; ")
 
 # ok to execute multiple statements with executescript()
 db.executescript("SELECT 1; SELECT 2")
+
+
+# ensure matching number of query param/passed params is allowed
+db.execute("SELECT 1", [])
+db.execute("SELECT 1", ())
+db.execute("SELECT ?", [1])
+db.execute("SELECT ?, ?", [1, 2])
+db.execute("SELECT ?, ?", (1, 2))
+
+
+# ignore param count when using star exprs
+db.execute("SELECT 1", [*[1, 2, 3]])
 """
 
     assert not get_sqlite_errors_from_code(code)
@@ -73,6 +85,13 @@ def test_verify_invalid_sql() -> None:
         SquallError(
             error="Cannot use multiple SQL statements with `execute` or `executemany`", line=94
         ),
+        SquallError(error="Mismatched number of args and query params", line=98),
+        SquallError(error="Mismatched number of args and query params", line=99),
+        SquallError(error="Mismatched number of args and query params", line=100),
+        SquallError(error="Mismatched number of args and query params", line=101),
+        SquallError(error="Mismatched number of args and query params", line=102),
+        SquallError(error="Mismatched number of args and query params", line=103),
+        SquallError(error="Mismatched number of args and query params", line=104),
     ]
 
 

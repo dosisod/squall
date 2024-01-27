@@ -72,6 +72,7 @@ extend-ignore = [
   "FIX002", "FIX004",
   "S101",
   "TD002", "TD003",
+  "PLR2004",
 ]
 
 extend-exclude = ["test/data*"]
