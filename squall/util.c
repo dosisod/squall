@@ -13,7 +13,7 @@
 PyObject *util_validate(PyObject *self, PyObject *args, PyObject *kwargs);
 
 static PyMethodDef util_methods[] = {
-	{"validate", _PyCFunction_CAST(util_validate), METH_VARARGS | METH_KEYWORDS, NULL},
+	{"validate", (PyCFunction)((void(*)(void))util_validate), METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
