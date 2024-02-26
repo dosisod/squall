@@ -62,9 +62,9 @@ testpaths = ["test"]
 line-length = 99
 target-version = "py310"
 
-select = ["ALL"]
+lint.select = ["ALL"]
 
-extend-ignore = [
+lint.extend-ignore = [
   "A002",
   "ANN101", "ANN102",
   "D100", "D101", "D102", "D103", "D104", "D105", "D107", "D200", "D202", "D203",
@@ -78,6 +78,6 @@ extend-ignore = [
 
 extend-exclude = ["test/data*"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "squall/visitor.py" = ["N802"]
 "squall/*" = ["INP001"]
