@@ -5,7 +5,7 @@ lint: ruff black isort mypy
 test: pytest
 
 ruff:
-	ruff .
+	ruff check .
 
 black:
 	black squall setup.py --check --diff
